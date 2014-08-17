@@ -1,11 +1,9 @@
 package DBN;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 import org.jblas.DoubleMatrix;
 import org.jblas.MatrixFunctions;
-import org.jblas.ranges.IntervalRange;
 import org.jblas.util.Permutations;
 
 import util.Option;
