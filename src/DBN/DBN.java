@@ -1,4 +1,4 @@
-package DBN;
+package dbn;
 
 
 import org.jblas.DoubleMatrix;
