@@ -80,7 +80,6 @@ public class RBM {
 			System.out.println("epoch " + (i + 1) + "/" + option.numepochs
 					+ ". Average Reconstruction Error is: "
 					+ (error / numbatches));
-			System.out.println(error_list.toString());
 		}
 	}
 
