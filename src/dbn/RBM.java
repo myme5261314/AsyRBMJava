@@ -65,7 +65,8 @@ public class RBM {
 			ArrayList<Double> error_list = new ArrayList<Double>();
 			for (int j = 0; j < numbatches; j++) {
 				int[] oneIndex = new int[option.batchsize];
-				System.arraycopy(index, j*option.batchsize, oneIndex, 0, option.batchsize);
+				System.arraycopy(index, j * option.batchsize, oneIndex, 0,
+						option.batchsize);
 				DoubleMatrix batch = x.getRows(oneIndex);
 				DoubleMatrix[] grad = computeGradient(batch, option);
 				vW.muli(momentum).addi(grad[0]);
@@ -93,7 +94,15 @@ public class RBM {
 				.sigmoidMat(in.mmul(W).add(b.transpose().repmat(in.rows, 1)));
 	}
 
-	private DoubleMatrix[] computeGradient(DoubleMatrix batch, Option option) {
+	/**
+	 * 
+	 * @param batch
+	 *            batch data
+	 * @param option
+	 *            option
+	 * @return {vW, vb, vc, error}
+	 */
+	public DoubleMatrix[] computeGradient(DoubleMatrix batch, Option option) {
 		DoubleMatrix[] out = new DoubleMatrix[4];
 
 		DoubleMatrix t_WT = W.transpose();
