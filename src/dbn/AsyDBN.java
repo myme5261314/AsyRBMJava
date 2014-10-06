@@ -18,9 +18,10 @@ public class AsyDBN extends DBN {
 	 * @param op
 	 * @param sz
 	 */
-	int thread_num = 2;
-	public AsyDBN(DoubleMatrix x, Option op, int[] sz) {
+	int thread_num;
+	public AsyDBN(DoubleMatrix x, Option op, int[] sz, int thread_num) {
 		super(x, op, sz);
+		this.thread_num = thread_num;
 		// TODO Auto-generated constructor stub
 	}
 	
@@ -29,7 +30,7 @@ public class AsyDBN extends DBN {
 		boolean flag = true;
 		for (int i = 0; i < this.size.length-1; i++) {
 			int[] sz = {size[i], size[i+1]};
-			rbm[i] = new AsyRBM( sz, option.alpha, option.momentum );
+			rbm[i] = new AsyRBM( sz, option.alpha, option.momentum, this.thread_num );
 			flag &= rbm[i].setup();
 		}
 		return flag;

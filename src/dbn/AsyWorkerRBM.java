@@ -22,12 +22,12 @@ public class AsyWorkerRBM extends RBM implements Runnable {
 	 * @param alpha
 	 * @param momentum
 	 */
+	final static ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+//	static int enter_fetch = 0;
+//	static int enter_push = 0;
 	DoubleMatrix part_x;
-	DoubleMatrix accrued_W, accrued_b, accrued_c;
 	AsyRBM server_rbm;
 	Option op;
-	int n_push = 10;
-	int n_fetch = 50;
 
 	public AsyWorkerRBM(DoubleMatrix part_x, AsyRBM server_rbm, Option option,
 			int[] sz, double alpha, double momentum) {
@@ -53,11 +53,16 @@ public class AsyWorkerRBM extends RBM implements Runnable {
 		int m = part_x.rows;
 		int numbatches = m / op.batchsize;
 		int[] index = Permutations.randomPermutation(m);
-		ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+
 		for (int i = 0; i < numbatches; i++) {
-			if (step % n_fetch == 0) {
+			if (step % op.fetch == 0) {
 				lock.readLock().lock();
+//				System.out.println(Thread.currentThread().getName()
+//						+ " enter the " + enter_fetch + "th fetch.");
 				fetchFromServer(server_rbm);
+//				System.out.println(Thread.currentThread().getName()
+//						+ " exit the " + enter_fetch + "th fetch.");
+//				enter_fetch++;
 				lock.readLock().unlock();
 			}
 
@@ -68,55 +73,52 @@ public class AsyWorkerRBM extends RBM implements Runnable {
 			vW.muli(momentum).addi(grad[0]);
 			vb.muli(momentum).addi(grad[1]);
 			vc.muli(momentum).addi(grad[2]);
-			accrued_W.addi(vW);
-			accrued_b.addi(vb);
-			accrued_c.addi(vc);
 			W.addi(vW);
 			b.addi(vb);
 			c.addi(vc);
 			error += grad[3].scalar();
 			error_list.add(grad[3].scalar());
 
-			if (step % n_push == 0) {
+			if (step % op.push == 0) {
 				lock.writeLock().lock();
+//				System.out.println(Thread.currentThread().getName()
+//						+ " enter the " + enter_push + "th push.");
 				pushToServer(server_rbm);
+//				System.out.println(Thread.currentThread().getName()
+//						+ " exit the " + enter_push + "th push.");
+//				enter_push++;
 				lock.writeLock().unlock();
 			}
+			step++;
 		}
-		System.out.println(Thread.currentThread().getName()
-				+ ". Average Reconstruction Error is: " + (error / numbatches));
-		clearAccrued();
+//		System.out.println(Thread.currentThread().getName()
+//				+ ". Average Reconstruction Error is: " + (error / numbatches));
+		server_rbm.avg_error += error/numbatches;
 
 	}
 
 	public boolean setup() {
 		super.setup();
-		accrued_W = DoubleMatrix.zeros(W.rows, W.columns);
-		accrued_b = DoubleMatrix.zeros(b.rows, b.columns);
-		accrued_c = DoubleMatrix.zeros(c.rows, c.columns);
 		return true;
 	}
 
 	private void resetAccrued() {
-		accrued_W.fill(0);
-		accrued_b.fill(0);
-		accrued_c.fill(0);
+		vW.fill(0);
+		vb.fill(0);
+		vc.fill(0);
 	}
 
-	private void clearAccrued() {
-		accrued_W = null;
-		accrued_b = null;
-		accrued_c = null;
-	}
 
 	/**
 	 * @param server_rbm2
 	 */
 	private void pushToServer(AsyRBM rbm) {
 		// TODO Auto-generated method stub
-		rbm.W.addi(accrued_W);
-		rbm.b.addi(accrued_b);
-		rbm.c.addi(accrued_c);
+		double w2 = 1.0d/rbm.thread_num;
+		double w1 = 1-w2;
+		rbm.W.muli(w1).addi(W.mul(w2));
+		rbm.b.muli(w1).addi(b.mul(w2));
+		rbm.c.muli(w1).addi(c.mul(w2));
 		resetAccrued();
 	}
 
@@ -127,7 +129,11 @@ public class AsyWorkerRBM extends RBM implements Runnable {
 		// TODO Auto-generated method stub
 		W.copy(rbm.W);
 		b.copy(rbm.b);
+//		assert(b.ne(rbm.b).sum()==0);
 		c.copy(rbm.c);
+//		vW.fill(0);
+//		vb.fill(0);
+//		vc.fill(0);
 	}
 
 }

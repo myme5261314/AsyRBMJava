@@ -4,7 +4,7 @@
 package dbn;
 
 import org.jblas.DoubleMatrix;
-import org.jblas.ranges.IntervalRange;
+import org.jblas.util.Permutations;
 
 import util.Option;
 
@@ -19,10 +19,12 @@ public class AsyRBM extends RBM {
 	 * @param alpha
 	 * @param momentum
 	 */
-	int thread_num = 4;
+	int thread_num;
+	double avg_error = 0;
 
-	public AsyRBM(int[] sz, double alpha, double momentum) {
+	public AsyRBM(int[] sz, double alpha, double momentum, int thread_num) {
 		super(sz, alpha, momentum);
+		this.thread_num = thread_num;
 		// TODO Auto-generated constructor stub
 	}
 
@@ -30,11 +32,14 @@ public class AsyRBM extends RBM {
 		int m = x.rows;
 		DoubleMatrix[] split_x = new DoubleMatrix[thread_num];
 		int split_size = m / thread_num;
+		int[] index = Permutations.randomPermutation(m);
 		for (int i = 0; i < split_x.length; i++) {
-			split_x[i] = x.getRows(new IntervalRange(i * split_size, (i + 1)
-					* split_size));
+			int[] oneIndex = new int[split_size];
+			System.arraycopy(index, i * split_size, oneIndex, 0, split_size);
+			split_x[i] = x.getRows(oneIndex);
 		}
 		for (int i = 0; i < option.numepochs; i++) {
+			avg_error = 0;
 			Thread[] thread_list = new Thread[thread_num];
 			for (int j = 0; j < thread_list.length; j++) {
 				thread_list[j] = new Thread(new AsyWorkerRBM(split_x[j], this,
@@ -49,6 +54,8 @@ public class AsyRBM extends RBM {
 					e.printStackTrace();
 				}
 			}
+			System.out.println("Epoch " + i
+					+ ". Average Reconstruction Error is: " + avg_error/thread_num);
 		}
 	}
 

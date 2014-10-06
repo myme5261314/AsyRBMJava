@@ -31,24 +31,28 @@ public class testDBN {
 		begintime = System.currentTimeMillis();
 		Option op = new Option();
 		op.numepochs = 10;
+		op.momentum = 0;
+		op.alpha = 1;
+		op.push = 5;
+		op.fetch = 10;
 		int[] size = { 100, 100 };
-		DBN dbn = new DBN(xy[0], op, size);
-		dbn.setup();
-		dbn.train();
-		endtime = System.currentTimeMillis();
-		dispTime("Finish normal RBM. ", begintime, endtime);
-		begintime = System.currentTimeMillis();
-		NN nn = new NN(dbn, 10);
-		nn.train(xy[0], xy[1], op);
-		double err = nn.test(xy[0], xy[1]);
-		System.out.println("The accuracy on train set is " + err);
-		err = nn.test(xy[2], xy[3]);
-		System.out.println("The accuracy on test set is " + err);
-		endtime = System.currentTimeMillis();
-		dispTime("Finish normalRBM's NN. ", begintime, endtime);
+//		DBN dbn = new DBN(xy[0], op, size);
+//		dbn.setup();
+//		dbn.train();
+//		endtime = System.currentTimeMillis();
+//		dispTime("Finish normal RBM. ", begintime, endtime);
+//		begintime = System.currentTimeMillis();
+//		NN nn = new NN(dbn, 10);
+//		nn.train(xy[0], xy[1], op);
+//		double err = nn.test(xy[0], xy[1]);
+//		System.out.println("The accuracy on train set is " + err);
+//		err = nn.test(xy[2], xy[3]);
+//		System.out.println("The accuracy on test set is " + err);
+//		endtime = System.currentTimeMillis();
+//		dispTime("Finish normalRBM's NN. ", begintime, endtime);
 
 		begintime = System.currentTimeMillis();
-		AsyDBN asy_dbn = new AsyDBN(xy[0], op, size);
+		AsyDBN asy_dbn = new AsyDBN(xy[0], op, size, 4);
 		asy_dbn.setup();
 		asy_dbn.train();
 		endtime = System.currentTimeMillis();
@@ -56,16 +60,17 @@ public class testDBN {
 		begintime = System.currentTimeMillis();
 		NN nn1 = new NN(asy_dbn, 10);
 		nn1.train(xy[0], xy[1], op);
-		double err1 = nn1.test(xy[2], xy[3]);
+		double err1 = nn1.test(xy[0], xy[1]);
 		System.out.println("The accuracy on train set is " + err1);
 		err1 = nn1.test(xy[2], xy[3]);
 		System.out.println("The accuracy on test set is " + err1);
 		endtime = System.currentTimeMillis();
-		dispTime("Finish normalRBM's NN. ", begintime, endtime);
+		dispTime("Finish AsyRBM's NN. ", begintime, endtime);
 
 	}
 
 	public static void getXY(DoubleMatrix[] xy) {
+		// xy [train_x, train_y, test_x, test_y]
 		MNISTImageReader r = new MNISTImageReader("train-images-idx3-ubyte");
 		xy[0] = r.getDataMat();
 		MNISTLabelReader ry = new MNISTLabelReader("train-labels-idx1-ubyte");

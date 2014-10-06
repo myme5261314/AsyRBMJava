@@ -14,4 +14,6 @@ public class Option {
 	public int batchsize = 100;
 	public double momentum = 0;
 	public double alpha = 1;
+	public int push = 5;
+	public int fetch = 10;
 }
